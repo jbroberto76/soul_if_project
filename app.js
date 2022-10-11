@@ -2,9 +2,9 @@
 
 const token = process.env.WHATSAPP_TOKEN
 
-const {express} = require("express")
-const {body_parser} = require("body-parser")
-const {axios} = require("axios")
+const express = require("express")
+const body_parser = require("body-parser")
+const axios = require("axios")
 const app = express()
 
 app.listen(process.env.PORT || 8000, () => {
