@@ -29,7 +29,7 @@ const client = new MongoClient(uri);
 const phone_number_id = "103594915867313";
 
 app.listen(process.env.PORT || 8000, () => {
-  console.log("Soul_IF webhook listening...");
+  console.log("Soul_IF webhook listening ...");
 });
 
 // start a poll with active users
@@ -40,6 +40,7 @@ app.post("/poll/:id", async (req, res) => {
   let pesquisa = await egressosDAO.getPollbyId(client, id_);
   // get list of active users (egressos)
   let activeUsers = await egressosDAO.getActiveUsers(client);
+  console.log(JSON.stringify(activeUsers, null, 2));
 
   // send accept poll message to users
   activeUsers.forEach((egresso) => {
@@ -89,15 +90,15 @@ app.post("/poll/:id", async (req, res) => {
   res.sendStatus(200);
 });
 
-// Start conversations
+// start converstions
 app.post("/start", async (req, res) => {
   // get list of users to start the conversations
-  let activeUsers = await egressosDAO.getActiveUsers(client);
+  let newUsers = await egressosDAO.getNewUsers(client);
 
-  //console.log(activeUsers);
+  console.log(newUsers);
 
   // send presentation message templates
-  activeUsers.forEach((egresso) => {
+  newUsers.forEach((egresso) => {
     axios({
       method: "POST", // Required, HTTP method, a string, e.g. POST, GET
       url:
@@ -109,53 +110,20 @@ app.post("/start", async (req, res) => {
         token,
       data: {
         messaging_product: "whatsapp",
-        to: user.telefone,
+        to: egresso.telefone,
         type: "template",
         template: {
-          name: "presentation",
+          name: "acceptancee",
           language: { code: "pt_br" },
           components: [
             {
               type: "body",
               parameters: [
-                { type: "text", text: egresso.nome },
-                { type: "text", text: egresso.curso },
-                { type: "text", text: egresso.campus },
-              ],
+                    { type: "text", text: egresso.nome },
+                    { type: "text", text: egresso.curso },
+                    { type: "text", text: egresso.campus } ] 
             },
-          ],
-        },
-      },
-      headers: { "Content-Type": "application/json" },
-    }).catch(function (error) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      console.log(error.response.data);
-      console.log(error.response.status);
-      console.log(error.response.headers);
-    });
-  });
-
-  // send acceptance message template
-  activeUsers.forEach((user) => {
-    axios({
-      method: "POST", // Required, HTTP method, a string, e.g. POST, GET
-      url:
-        "https://graph.facebook.com/" +
-        version +
-        "/" +
-        phone_number_id +
-        "/messages?access_token=" +
-        token,
-      data: {
-        messaging_product: "whatsapp",
-        to: user.telefone,
-        type: "template",
-        template: {
-          name: "acceptance",
-          language: { code: "pt_pt" },
-          components: [
-            {
+            { 
               type: "button",
               sub_type: "quick_reply",
               index: "0",
@@ -166,7 +134,7 @@ app.post("/start", async (req, res) => {
               sub_type: "quick_reply",
               index: "1",
               parameters: [{ type: "payload", payload: "PAYLOAD_ONE" }],
-            },
+            }
           ],
         },
       },
@@ -182,7 +150,7 @@ app.post("/start", async (req, res) => {
   res.sendStatus(200);
 });
 
-//
+// 
 app.post("/webhook", async (req, res) => {
   let body = req.body;
 
@@ -259,7 +227,9 @@ app.post("/webhook", async (req, res) => {
             messaging_product: "whatsapp",
             to: from,
             type: "template",
-            template: { name: "thankno", language: { code: "pt_br" } },
+            template: { 
+              name: "thankno", 
+              language: { code: "pt_br" } },
           },
           headers: { "Content-Type": "application/json" },
         }).catch(function (error) {
@@ -353,14 +323,12 @@ app.post("/webhook", async (req, res) => {
         poll_data.from = from;
         // store reply on DB
         result = await egressosDAO.updatePollReply(client, poll_data);
-        //console.log(`PAYLOAD: ${payload}`)
-        //console.log(JSON.stringify(poll_data, null, 2));
         // 
         if (result.acknowledged === true) {
           console.log("Resposta de egresso regristrada no BD!")
           // check next question
           if (poll_data.last === 1) { // last question
-            const pesquisa = await egressosDAO.getPollbyId(client, poll_data.id_);
+            let pesquisa = await egressosDAO.getPollbyId(client, poll_data.id_);
             //   send thankno template
             axios({
               method: "POST", // Required, HTTP method, a string, e.g. POST, GET
@@ -382,8 +350,8 @@ app.post("/webhook", async (req, res) => {
                     {
                       type: "body",
                         parameters: [
-                          { type: "text", text: pesquisa.campus },
-                          { type: "text", text: pesquisa.titulo }
+                          { type: "text", text: pesquisa[0].campus },
+                          { type: "text", text: pesquisa[0].titulo }
                         ],
                     },
                   ],
@@ -399,9 +367,7 @@ app.post("/webhook", async (req, res) => {
             });
           } else { // send next question
             // increment index to next question
-            //console.log(`${poll_data.idx}`)
             poll_data.idx++;
-            console.log(JSON.stringify(poll_data, null, 2));
             // get poll data
             const pesquisa = await egressosDAO.getPollbyId(client, poll_data.id_);
             let perguntas = pesquisa[0].perguntas[poll_data.idx];
@@ -471,7 +437,7 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-//
+// only for Cloud API confirmation
 app.get("/webhook", (req, res) => {
   // token de verificação idêntico ao "Verificar token" cadastrado
   // no Painel de Aplicativos da Meta

@@ -1,6 +1,6 @@
 {
   "name": "soul_if_project",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Arquivos do projeto Soul_IF",
   "main": "app.js",
   "scripts": {
