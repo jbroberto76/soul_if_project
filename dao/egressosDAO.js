@@ -127,6 +127,27 @@ class egressosDAO {
       console.log(err);
     }
   }
+  
+  static async updatePollReply2(client, data_) {
+    const cursor = await client
+      .db("soul_if_project")
+      .collection("respostas")
+      .insertOne(
+        {
+          id: data_.id_,
+          wa_id: data_.from,
+          ts: new Date(),
+          pergunta: data_.idx,
+          resposta: data_.choice
+        }
+      );
+    try {
+      return cursor;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+  
 }
 
 module.exports = egressosDAO;

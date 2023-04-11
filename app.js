@@ -95,7 +95,7 @@ app.post("/start", async (req, res) => {
   // get list of users to start the conversations
   let newUsers = await egressosDAO.getNewUsers(client);
 
-  console.log(newUsers);
+  //console.log(newUsers);
 
   // send presentation message templates
   newUsers.forEach((egresso) => {
@@ -290,7 +290,7 @@ app.post("/webhook", async (req, res) => {
                 text: "Campus " + pesquisa[0].campus,
               },
               action: {
-                button: "Qual sua opinião?",
+                button: "Responda aqui:",
                 sections: s1 + s2.toString() + s3,
               },
             },
@@ -322,7 +322,7 @@ app.post("/webhook", async (req, res) => {
         poll_data = Object.assign(poll_data, last)
         poll_data.from = from;
         // store reply on DB
-        result = await egressosDAO.updatePollReply(client, poll_data);
+        result = await egressosDAO.updatePollReply2(client, poll_data);
         // 
         if (result.acknowledged === true) {
           console.log("Resposta de egresso regristrada no BD!")
